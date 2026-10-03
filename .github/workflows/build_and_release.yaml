@@ -120,6 +120,30 @@ jobs:
         working-directory: aseprite/build/bin
         shell: bash
         run: find . -mindepth 1 ! \( -name 'aseprite' -o -name 'aseprite.exe' -o -name 'data' -prune -o -name 'Aseprite.app' -prune \) -exec rm -rf {} +
+      - name: Install fpm
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y rpm
+          sudo gem install fpm --no-document
+      - name: Compute RPM version
+        id: rpmver
+        shell: bash
+        run: |
+          TAG='${{ needs.create-release.outputs.release-tag }}'
+          VER="${TAG#v}"
+          VER="${VER//-/\~}"
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+      - name: Build RPM
+        shell: bash
+        run: |
+          fpm -s dir -t rpm -n aseprite \
+            -v '${{ steps.rpmver.outputs.version }}' \
+            --iteration 1 -a x86_64 --rpm-autoreqprov \
+            --license Proprietary --url https://www.aseprite.org/ \
+            --description "Animated sprite editor & pixel art tool" \
+            aseprite/build/bin/aseprite=/usr/bin/aseprite \
+            aseprite/build/bin/data=/usr/share/aseprite/data
       - name: Make portable zip
         working-directory: aseprite/build/bin
         run: echo '# This file is here so Aseprite behaves as a portable program' > aseprite.ini
@@ -133,3 +157,12 @@ jobs:
           file: aseprite/build/bin/Aseprite-${{ needs.create-release.outputs.release-tag }}-${{ runner.os }}.zip
           asset_name: Aseprite-${{ needs.create-release.outputs.release-tag }}-${{ runner.os }}.zip
           tag: ${{ needs.create-release.outputs.release-tag }}
+          overwrite: true
+      - name: Upload RPM
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: aseprite-${{ steps.rpmver.outputs.version }}-1.x86_64.rpm
+          asset_name: aseprite-${{ steps.rpmver.outputs.version }}-1.x86_64.rpm
+          tag: ${{ needs.create-release.outputs.release-tag }}
+          overwrite: true
