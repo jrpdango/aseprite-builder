@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'BuildLog.md'
+      - "BuildLog.md"
   workflow_dispatch:
 env:
   BUILD_TYPE: Release
@@ -22,9 +22,9 @@ jobs:
         id: aseprite-link
         uses: a1393323447/fetch-release@main
         with:
-            group: aseprite
-            repo: aseprite
-            match: Aseprite-.*?-Source.zip
+          group: aseprite
+          repo: aseprite
+          match: Aseprite-.*?-Source.zip
 
   create-release:
     name: Create Release
@@ -51,9 +51,9 @@ jobs:
       contents: write
     runs-on: ${{ matrix.os }}
     strategy:
-        matrix:
-          os: [ windows-latest, ubuntu-latest, macOS-latest ]
-        fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+      fail-fast: false
     steps:
       - name: Install Dependencies
         if: runner.os == 'Linux'
