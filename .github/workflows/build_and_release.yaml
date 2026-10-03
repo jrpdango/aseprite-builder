@@ -157,7 +157,7 @@ jobs:
             --license Proprietary --url https://www.aseprite.org/ \
             --description "Animated sprite editor & pixel art tool" \
             aseprite/build/bin/aseprite=/usr/bin/aseprite \
-            aseprite/build/bin/data=/usr/share/aseprite/data
+            aseprite/build/bin/data/=/usr/share/aseprite/data
       - name: Make portable zip
         working-directory: aseprite/build/bin
         run: echo '# This file is here so Aseprite behaves as a portable program' > aseprite.ini
