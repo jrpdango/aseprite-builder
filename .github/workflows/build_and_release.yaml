@@ -7,6 +7,16 @@ on:
     paths:
       - "BuildLog.md"
   workflow_dispatch:
+    inputs:
+      os:
+        description: "Operating system to build for"
+        required: true
+        default: linux
+        type: choice
+        options:
+          - linux
+          - windows
+          - macos
 env:
   BUILD_TYPE: Release
 
@@ -52,7 +62,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os:
+          - ${{ (github.event.inputs.os == 'windows' && 'windows-latest') || (github.event.inputs.os == 'macos' && 'macos-latest') || 'ubuntu-latest' }}
       fail-fast: false
     steps:
       - name: Install Dependencies
@@ -121,6 +132,7 @@ jobs:
         shell: bash
         run: find . -mindepth 1 ! \( -name 'aseprite' -o -name 'aseprite.exe' -o -name 'data' -prune -o -name 'Aseprite.app' -prune \) -exec rm -rf {} +
       - name: Install fpm
+        if: runner.os == 'Linux'
         shell: bash
         run: |
           sudo apt-get update -qq
@@ -128,6 +140,7 @@ jobs:
           sudo gem install fpm --no-document
       - name: Compute RPM version
         id: rpmver
+        if: runner.os == 'Linux'
         shell: bash
         run: |
           TAG='${{ needs.create-release.outputs.release-tag }}'
@@ -135,6 +148,7 @@ jobs:
           VER="${VER//-/\~}"
           echo "version=$VER" >> "$GITHUB_OUTPUT"
       - name: Build RPM
+        if: runner.os == 'Linux'
         shell: bash
         run: |
           fpm -s dir -t rpm -n aseprite \
@@ -159,6 +173,7 @@ jobs:
           tag: ${{ needs.create-release.outputs.release-tag }}
           overwrite: true
       - name: Upload RPM
+        if: runner.os == 'Linux'
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
